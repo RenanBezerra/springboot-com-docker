@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.renanbezerra.controller.dto.PessoaRq;
 import br.com.renanbezerra.controller.dto.PessoaRs;
 import br.com.renanbezerra.model.Pessoa;
+import br.com.renanbezerra.repository.PessoaCustomRepository;
 import br.com.renanbezerra.repository.PessoaRepository;
 import lombok.var;
 
@@ -22,9 +24,12 @@ import lombok.var;
 public class PessoaController {
 
 	private final PessoaRepository pessoaRepository;
+	private final PessoaCustomRepository pessoaCustomRepository;
+	
 
-	public PessoaController(PessoaRepository pessoaRepository) {
+	public PessoaController(PessoaRepository pessoaRepository, PessoaCustomRepository pessoaCustomRepository) {
 		this.pessoaRepository = pessoaRepository;
+		this.pessoaCustomRepository = pessoaCustomRepository;
 	}
 
 	@GetMapping("/funcionando")
@@ -69,6 +74,23 @@ public class PessoaController {
 		}else {
 			throw new Exception("Pessoa não encontrada");
 		}
+	}
+	
+	@GetMapping("/filter")
+	public List<PessoaRs> findPersonByName(@RequestParam("name") String name){
+		return this.pessoaRepository.findByNomeContains(name)
+				.stream().map(PessoaRs::converter)
+				.collect(Collectors.toList());
+	}
+	
+	@GetMapping("/filter/custom")
+	public List<PessoaRs> findPersonByCustom(
+			@RequestParam(value = "id", required = false) Long id,
+			@RequestParam(value = "name", required = false) String name,
+			@RequestParam(value = "sobrenome", required = false) String sobrenome){
+		return this.pessoaCustomRepository.find(id, name, sobrenome)
+				.stream().map(PessoaRs::converter)
+				.collect(Collectors.toList());
 	}
 
 }
